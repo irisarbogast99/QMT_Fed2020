@@ -1,0 +1,57 @@
+###################################################
+#QMT Homework 3 Code
+#Iris Arbogast (irisarbogast@gmail.com)
+#Oct 5, 2020
+###################################################
+
+
+###############PROBLEMS: Need to get the right σ for the range. Then need to make tm sum to 1
+
+#parameters
+ρ = 0.96
+σ_ϵ_2 = 0.045
+σ_ϵ = sqrt(σ_ϵ_2)
+Ω = 4
+N = 18
+
+#1a
+#Use tauchen method with state space for log labor earnings divided in 18 equidistant
+#points that range between 4 sigma and 4 sigma
+
+#create the state space
+state_space = LinRange(-Ω*σ_ϵ,Ω*σ_ϵ,N) #wait, def using the wrong σ here
+#define step hs
+hs = (2*Ω*σ_ϵ)/(N-1)
+
+
+#initialize transition matrix of size NxN
+P = reshape(zeros(N*N),N,N)
+
+using Distributions
+#create transition matrix
+for i in 1:N
+    for j in 1:N
+        if j == 1
+            P[i,j] = cdf(Normal(0,σ_ϵ), (state_space[j] - ρ*state_space[i] + (hs/2))/σ_ϵ)  #concerned about the quality of the subscripts in my notes. Are the indexes right? #Also wtf is z???
+        end
+        if j == N
+            P[i,j] = 1 - cdf(Normal(0,σ_ϵ), (state_space[j] - ρ*state_space[i] - (hs/2))/σ_ϵ)
+        else
+            P[i,j] = cdf(Normal(0,σ_ϵ), (state_space[j] - ρ*state_space[i] + (hs/2))/σ_ϵ) - cdf(Normal(0,σ_ϵ), (state_space[j] - ρ*state_space[i] - (hs/2))/σ_ϵ)
+        end
+    end
+end
+P
+
+# check that rows add to 1
+sum(P,dims = 2)
+#damnit, not summing to 1.
+#for some reason, almost entirely sums to 1 when I use sigma squared instead of sigma
+
+σ
+σ_ϵ
+#view array in REPL
+display(P[10:18,10:18])
+
+#I think this might be what he wants for output for Y?
+state_space = exp.(state_space)
